@@ -117,6 +117,6 @@ model {
 
 
 			  # For calculating DIC value:
-			  loglik_dic <- -2*sum(logLC[])
+			  loglik_dic <- 2*sum(logLC[]) - 2*N*C
 
  }

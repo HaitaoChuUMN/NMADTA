@@ -41,11 +41,20 @@ nmadt.hierarchical(
 
 \item{directory}{a string specifying the designated directory to save trace plots or potential scale reduction factors calculated in the function. The default is NULL.}
 
-\item{diag}{a number indicating the value of diagonal entries of the scale matrix R of the precision matrix \eqn{\Sigma}. The default is 5.}
+\item{diag}{A number specifying the diagonal entries of the scale matrix $R$ in the
+Wishart prior for the precision matrix \eqn{\Sigma^{-1}}. Larger values of \code{diag}
+typically imply stronger prior shrinkage, favoring smaller between-study variability in
+prevalence, sensitivity, and specificity. The default is \code{5}.}
 
-\item{off_diag}{a number indicating the value of off-diagonal entries of the scale matrix R of the precision matrix \eqn{\Sigma}. The default is 0.05.}
+\item{off_diag}{A number specifying the off-diagonal entries of the scale matrix $R$ in the
+Wishart prior for \eqn{\Sigma^{-1}}, controlling the strength of prior dependence among
+random effects (e.g., correlations between sensitivity and specificity and their association
+with prevalence). The default is \code{0.05}. If strong correlations are expected, users may
+increase \code{off_diag}; if substantially larger heterogeneity is anticipated, users may
+decrease \code{diag}. We recommend sensitivity analyses alongside standard MCMC diagnostics.}
 
-\item{digits}{a positive integer he number of digits to the right of the decimal point to keep for the results; digits=4 by default.}
+\item{digits}{A positive integer specifying the number of digits to the right of the decimal
+point to keep in the printed results; the default is \code{digits = 4}.}
 
 \item{mu_alpha}{a number indicating the mean of the normal distribution that the prior of the fixed effect for sensitivity follows. The default is 0.}
 

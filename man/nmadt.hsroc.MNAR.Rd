@@ -31,9 +31,9 @@ nmadt.hsroc.MNAR(
 \arguments{
 \item{nstu}{an integer indicating the number of studies included in the dataset.}
 
-\item{K}{an integer indicating the number of candiate test in the dataset.}
+\item{K}{an integer indicating the number of candidate test in the dataset.}
 
-\item{data}{a list conating the input dataset to be used for meta-analysis.}
+\item{data}{a list containing the input dataset to be used for meta-analysis.}
 
 \item{testname}{a string vector of the names of the candidate tests in the dataset in the same order as presetned in the dataset.}
 
@@ -45,9 +45,15 @@ nmadt.hsroc.MNAR(
 
 \item{digits}{a positive integer he number of digits to the right of the decimal point to keep for the results; digits=4 by default.}
 
-\item{gamma1}{a vector indicating coefficients of study-specific sensitivity in the MNAR model.}
+\item{gamma1}{A numeric vector (length \code{K}) for coefficients on \eqn{\text{logit}(\text{Se}_{ik})}
+in the MNAR missingness model. Recommended to treat as sensitivity-analysis parameters.
+See \code{gamma0} for suggested grids and interpretation.}
 
-\item{gamma0}{a vector indicating coefficients of study-specific specificity in the MNAR model.}
+\item{gamma0}{A numeric vector (length \code{K}) for coefficients on \eqn{\text{logit}(\text{Sp}_{ik})}
+in the MNAR missingness model. Recommended to treat as sensitivity-analysis parameters.
+\eqn{\gamma_{0k}=0} corresponds to MAR with respect to accuracy; negative values
+(e.g., \code{c(0, -0.5, -1, -2)}) represent the common assumption that tests with poorer accuracy
+are more likely to be missing.}
 
 \item{mu_gamma}{a number specifying mean of intercept in the MNAR model. The default is 0.}
 
@@ -55,9 +61,9 @@ nmadt.hsroc.MNAR(
 
 \item{n.adapt}{a positive integer indicating the number of iterations for adaptation. The default is 5,000.}
 
-\item{n.iter}{a postive integer indicating the number of iterations in each MCMC chain. The default is 50,000.}
+\item{n.iter}{a positive integer indicating the number of iterations in each MCMC chain. The default is 50,000.}
 
-\item{n.chains}{a postive interger indicating the number of MCMC chains. The default is 3.}
+\item{n.chains}{a positive integer indicating the number of MCMC chains. The default is 3.}
 
 \item{n.burnin}{a positive integer indicating the number of burn-in iterations at the beginning of each chain without saving any of the posterior samples. The default is \code{floor(n.iter/2)}.}
 

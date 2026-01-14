@@ -55,7 +55,7 @@ nmadt.hsroc=function(nstu, K, data, testname, directory= NULL, eta=0, xi_preci=1
     stop("need to specify number of diagnostic tests.")
   if (K<1|K>5)
     stop("number of diagnostic tests out of bound (should be between 1-5).")
-
+  
   R1 = matrix(0,nrow=K+1,ncol=K+1)                    # Parameter of Inverse wishart distribution
   R2 = matrix(0,nrow=K,ncol=K)
   diag(R1) = 1
@@ -65,15 +65,15 @@ nmadt.hsroc=function(nstu, K, data, testname, directory= NULL, eta=0, xi_preci=1
   N <- nrow(data)
   delta<-delta<-data[c(2:(K+2))]
   param = c("Se", "Sp","prev","ppv","npv","LRpos","LRneg")
-
-
+  
+  
   if(!isTRUE(all(delta == floor(delta)))|any(delta<0)|any(delta>1)|any(is.na(delta))){
     stop("missing indicator not in the right format(0 for missing data and 1 for nonmissing data)" )
   }
   y<-data[c((K+3):(2*K+3))]
   sid<-data[,1]
   n<-as.data.frame(data[,ncol(data)])
-
+  
   if(any(is.na(delta))){
     stop("missing test results should be denoted as 999 instead of NA)" )
   }
@@ -93,8 +93,8 @@ nmadt.hsroc=function(nstu, K, data, testname, directory= NULL, eta=0, xi_preci=1
     if (!any(is.element(trace, param)))
       stop("at least one effect size in argument trace is not available.")
   }
-
-
+  
+  
   monitor<-c("post.se","post.sp","beta","mu1","mu2","post.pi","loglik_dic","theta","alpha","pi","stud.se","stud.sp",'ppv','npv','LRpos','LRneg')
   data.jags <- list('n' = n, 'delta'=delta,'N' = N,'y'=y,'K'=K,'R1'=R1,'R2'=R2,'nstu'=nstu,'sid'=sid,'eta'=eta, 'xi_preci'=xi_preci)
   seed <- sample(1000000, 1)
@@ -123,7 +123,7 @@ nmadt.hsroc=function(nstu, K, data, testname, directory= NULL, eta=0, xi_preci=1
   out$rawOutput<-jags.out
   smry <- summary(jags.out)
   smry <- cbind(smry$statistics[, c("Mean", "SD")], smry$quantiles[, c("2.5%", "50%", "97.5%")])
-
+  
   Se.id <- grep("post.se", rownames(smry))
   Se.stat <- array(paste(format(round(smry[Se.id, "Mean"],
                                       digits = digits), nsmall = digits), " (", format(round(smry[Se.id,
@@ -233,7 +233,77 @@ nmadt.hsroc=function(nstu, K, data, testname, directory= NULL, eta=0, xi_preci=1
   colnames(LRneg.quan) <- "Median (95% CI)"
   rownames(LRneg.quan) <- testname
   out$LRneg <- list(Mean_SD = noquote(LRneg.stat), Median_CI = noquote(LRneg.quan))
+  
+  if (K >= 2) {
+    jags.mat <- as.matrix(jags.out)
+    n_comparisons <- K * (K - 1) / 2
+    comparison_names <- character(n_comparisons)
+    
+    dSe_mat <- matrix(NA, nrow = n_comparisons, ncol = 5)
+    dSp_mat <- matrix(NA, nrow = n_comparisons, ncol = 5)
+    
+    colnames(dSe_mat) <- colnames(dSp_mat) <- c("Mean", "SD", "2.5%", "50%", "97.5%")
+    
+    idx <- 1
+    for (i in 1:(K-1)) {
+      for (j in (i+1):K) {
+        
+        Se_i <- jags.mat[, paste0("post.se[", i, "]")]
+        Se_j <- jags.mat[, paste0("post.se[", j, "]")]
+        Sp_i <- jags.mat[, paste0("post.sp[", i, "]")]
+        Sp_j <- jags.mat[, paste0("post.sp[", j, "]")]
+        dSe <- Se_i - Se_j
+        dSp <- Sp_i - Sp_j
+        
+        comparison_names[idx] <- paste0(testname[i], " vs ", testname[j])
+        
+        dSe_mat[idx, ] <- c(mean(dSe), sd(dSe), quantile(dSe, c(0.025, 0.5, 0.975)))
+        dSp_mat[idx, ] <- c(mean(dSp), sd(dSp), quantile(dSp, c(0.025, 0.5, 0.975)))
+        
+        idx <- idx + 1
+      }
+    }
+    rownames(dSe_mat) <- rownames(dSp_mat) <- comparison_names
 
+    dSe_stat <- array(
+      paste(format(round(dSe_mat[, "Mean"], digits = digits), nsmall = digits),
+            " (", format(round(dSe_mat[, "SD"], digits = digits), nsmall = digits), ")", sep = ""),
+      dim = c(n_comparisons, 1)
+    )
+    colnames(dSe_stat) <- "Mean (SD)"
+    rownames(dSe_stat) <- comparison_names
+    
+    dSe_quan <- array(
+      paste(format(round(dSe_mat[, "50%"], digits = digits), nsmall = digits),
+            " (", format(round(dSe_mat[, "2.5%"], digits = digits), nsmall = digits),
+            ", ", format(round(dSe_mat[, "97.5%"], digits = digits), nsmall = digits), ")", sep = ""),
+      dim = c(n_comparisons, 1)
+    )
+    colnames(dSe_quan) <- "Median (95% CrI)"
+    rownames(dSe_quan) <- comparison_names
+    
+    out$dSe <- list(Mean_SD = noquote(dSe_stat), Median_CrI = noquote(dSe_quan))
+
+    dSp_stat <- array(
+      paste(format(round(dSp_mat[, "Mean"], digits = digits), nsmall = digits),
+            " (", format(round(dSp_mat[, "SD"], digits = digits), nsmall = digits), ")", sep = ""),
+      dim = c(n_comparisons, 1)
+    )
+    colnames(dSp_stat) <- "Mean (SD)"
+    rownames(dSp_stat) <- comparison_names
+    
+    dSp_quan <- array(
+      paste(format(round(dSp_mat[, "50%"], digits = digits), nsmall = digits),
+            " (", format(round(dSp_mat[, "2.5%"], digits = digits), nsmall = digits),
+            ", ", format(round(dSp_mat[, "97.5%"], digits = digits), nsmall = digits), ")", sep = ""),
+      dim = c(n_comparisons, 1)
+    )
+    colnames(dSp_quan) <- "Median (95% CrI)"
+    rownames(dSp_quan) <- comparison_names
+    
+    out$dSp <- list(Mean_SD = noquote(dSp_stat), Median_CrI = noquote(dSp_quan))
+  }
+  
   if (conv.diag) {
     message("Start calculating MCMC convergence diagnostic statistics...\n")
     conv.out <- gelman.diag(jags.out, multivariate = FALSE)
@@ -244,15 +314,34 @@ nmadt.hsroc=function(nstu, K, data, testname, directory= NULL, eta=0, xi_preci=1
   }
   if (dic) {
     message("Start calculating deviance information criterion statistics...\n")
-    dic.out <- dic.samples(model = jags.m, n.iter = n.iter,
-                           thin = n.thin)
-    dev <- sum(dic.out$deviance)
-    pen <- sum(dic.out$penalty)
-    pen.dev <- dev + pen
-    dic.stat <- rbind(dev, pen, pen.dev)
-    rownames(dic.stat) <- c("D.bar", "pD", "DIC")
-    colnames(dic.stat) <- ""
-    out$DIC <- dic.stat
+    
+    tryCatch({
+      jags.mat <- as.matrix(jags.out)
+      loglik_dic_var <- grep("^loglik_dic$", colnames(jags.mat), value = TRUE)
+      
+      if (length(loglik_dic_var) == 0) {
+        stop("loglik_dic not found in MCMC samples")
+      }
+      
+      deviance_samples <- jags.mat[, loglik_dic_var]
+      
+      dev <- mean(deviance_samples)
+      pen <- var(deviance_samples) / 2
+      pen.dev <- dev + pen
+      
+      dic.stat <- rbind(
+        round(dev, 2),  
+        round(pen, 2),     
+        round(pen.dev, 2)  
+      )
+      rownames(dic.stat) <- c("D.bar", "pD", "DIC")
+      colnames(dic.stat) <- ""
+      out$DIC <- dic.stat
+      
+    }, error = function(e) {
+      warning(paste("DIC calculation failed:", e$message))
+      out$DIC <- NULL
+    })
   }
   if (mcmc.samples) {
     out$mcmc.samples <- jags.out
@@ -377,4 +466,3 @@ nmadt.hsroc=function(nstu, K, data, testname, directory= NULL, eta=0, xi_preci=1
   return(out)
   #options(warn = 0)
 }
-

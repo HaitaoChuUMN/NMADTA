@@ -35,21 +35,30 @@ nmadt.hierarchical.MNAR(
 )
 }
 \arguments{
-\item{nstu}{an integer indimessageing the number of studies included in the dataset.}
+\item{nstu}{an integer indicating the number of studies included in the dataset.}
 
-\item{K}{an integer indicating the number of candiate test in the dataset.}
+\item{K}{an integer indicating the number of candidate test in the dataset.}
 
-\item{data}{a list conating the input dataset to be used for meta-analysis.}
+\item{data}{a list containing the input dataset to be used for meta-analysis.}
 
 \item{testname}{a string vector of the names of the candidate tests in the dataset in the same order as presetned in the dataset.}
 
 \item{directory}{a string specifying the designated directory to save trace plots or potential scale reduction factors calculated in the function. The default is NULL.}
 
-\item{diag}{a number indicating the value of diagonal entries of the scale matrix R of the precision matrix \eqn{\Sigma}. The default is 5.}
+\item{diag}{A number specifying the diagonal entries of the scale matrix $R$ in the
+Wishart prior for the precision matrix \eqn{\Sigma^{-1}}. Larger values of \code{diag}
+typically imply stronger prior shrinkage, favoring smaller between-study variability in
+prevalence, sensitivity, and specificity. The default is \code{5}.}
 
-\item{off_diag}{a number indicating the value of off-diagonal entries of the scale matrix R of the precision matrix \eqn{\Sigma}. The default is 0.05.}
+\item{off_diag}{A number specifying the off-diagonal entries of the scale matrix $R$ in the
+Wishart prior for \eqn{\Sigma^{-1}}, controlling the strength of prior dependence among
+random effects (e.g., correlations between sensitivity and specificity and their association
+with prevalence). The default is \code{0.05}. If strong correlations are expected, users may
+increase \code{off_diag}; if substantially larger heterogeneity is anticipated, users may
+decrease \code{diag}. We recommend sensitivity analyses alongside standard MCMC diagnostics.}
 
-\item{digits}{a positive integer he number of digits to the right of the decimal point to keep for the results; digits=4 by default.}
+\item{digits}{A positive integer specifying the number of digits to the right of the decimal
+point to keep in the printed results; the default is \code{digits = 4}.}
 
 \item{mu_alpha}{a number indicating the mean of the normal distribution that the prior of the fixed effect for sensitivity follows. The default is 0.}
 
@@ -63,9 +72,15 @@ nmadt.hierarchical.MNAR(
 
 \item{preci_eta}{a number indicating the precision of the normal distribution that the prior of the fixed effect for prevalence follows. The default is $0.1$.}
 
-\item{gamma1}{a vector indicating coefficients of study-specific sensitivity in the MNAR model.}
+\item{gamma1}{A numeric vector (length \code{K}) for coefficients on \eqn{\text{logit}(\text{Se}_{ik})}
+in the MNAR missingness model. Recommended to treat as sensitivity-analysis parameters.
+See \code{gamma0} for suggested grids and interpretation.}
 
-\item{gamma0}{a vector indicating coefficients of study-specific specificity in the MNAR model.}
+\item{gamma0}{A numeric vector (length \code{K}) for coefficients on \eqn{\text{logit}(\text{Sp}_{ik})}
+in the MNAR missingness model. Recommended to treat as sensitivity-analysis parameters.
+\eqn{\gamma_{0k}=0} corresponds to MAR with respect to accuracy; negative values
+(e.g., \code{c(0, -0.5, -1, -2)}) represent the common assumption that tests with poorer accuracy
+are more likely to be missing.}
 
 \item{mu_gamma}{a number specifying mean of intercept in the MNAR model. The default is 0.}
 
@@ -78,9 +93,9 @@ For example, the algorithm saves only one sample in every nth iteration, where n
 
 \item{n.adapt}{a positive integer indicating the number of iterations for adaptation. The default is 5,000.}
 
-\item{n.iter}{a postive integer indicating the number of iterations in each MCMC chain. The default is 50,000.}
+\item{n.iter}{a positive integer indicating the number of iterations in each MCMC chain. The default is 50,000.}
 
-\item{n.chains}{a postive interger indicating the number of MCMC chains. The default is 3.}
+\item{n.chains}{a positive integer indicating the number of MCMC chains. The default is 3.}
 
 \item{conv.diag}{a logical value specifying whether to compute potential scale reduction factors proposed for convergence diagnostics. The default is \code{FALSE}.}
 

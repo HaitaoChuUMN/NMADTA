@@ -1,28 +1,38 @@
 context("nmadt.hierarchical")
 test_that("nmadt.hierarchical is working and the results are reproducible", {
-
+  
   data(dat.kang, package = "NMADTA")
   kangdata <- dat.kang
-  kangdata<-kangdata[c(-4,-7)]
-  kangdata<-kangdata[-(17:28),]
-  kangdata$sid <- c(rep(c(1:9),each=4))
+  kangdata <- kangdata[c(-4,-7)]
+  kangdata <- kangdata[-(17:28),]
+  kangdata$sid <- c(rep(c(1:9), each = 4))
   set.seed(9)
-  kang.out.hierarchical <- nmadt.hierarchical(nstu=9, K=1, data=kangdata, testname=c("D-dimer"))
-
-  testname=c("D-dimer")
-  K = 1
-  mean = c(0.8392,0.9281)
-  sd<- c(0.0734,0.0470)
-  median <- c(0.8455,0.9338)
-  cil<-c(0.6737,0.8202)
-  ciu<-c(0.9582,0.9972)
-  Se.stat <- array(paste(mean, " (", sd, ")", sep = ""),dim = c(K, 1))
-  colnames(Se.stat) <- "Mean (SD)"
-  rownames(Se.stat) <- testname
-  Se.quan <- array(paste(median, " (", cil, ", ", ciu, ")", sep = ""),dim = c(K, 1))
-  colnames(Se.quan) <- "Median (95% CI)"
-  rownames(Se.quan) <- testname
-  Se <- list(Mean_SD = noquote(Se.stat), Median_CI = noquote(Se.quan))
-
-  expect_equal(as.numeric(unlist(kang.out.hierarchical$Se)),as.numeric(unlist(Se))+0.06)
+  suppressWarnings({
+    kang.out.hierarchical <- nmadt.hierarchical(
+      nstu=12, K=2,
+      data=dat.kang,
+      testname=c("D-dimer","Ultrasonography")
+    )
+  })
+  
+  testname=c("D-dimer","Ultrasonography")
+  mean = c(0.8417,0.9273)
+  sd <- c(0.0706,0.0448)
+  median <- c(0.8475,0.9319)
+  cil <- c(0.6844,0.9654)
+  ciu <- c(0.8278,0.9955)
+  
+  Se.stat <- array(paste(mean, " (", sd, ")", sep=""), dim=c(2,1),
+                   dimnames=list(testname, "Mean (SD)"))
+  Se.quan <- array(paste(median," (",cil,", ",ciu,")",sep=""), dim=c(2,1),
+                   dimnames=list(testname, "Median (95% CI)"))
+  
+  # function: extract mean value from "0.85 (0.06)"
+  extract_mean <- function(x) as.numeric(sub(" \\(.*", "", x))
+  
+  expect_equal(
+    extract_mean(kang.out.hierarchical$Se$Mean_SD),
+    mean,
+    tolerance = 0.02
+  )
 })

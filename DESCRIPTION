@@ -1,7 +1,7 @@
 Package: NMADTA
 Type: Package
 Title: Network Meta-Analysis of Multiple Diagnostic Tests
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: 
   c(person(given = "Xing", family = "Xing", 
     role = c("aut", "cre"), email = "xxing8@jh.edu",
@@ -35,7 +35,7 @@ RoxygenNote: 7.3.3
 Suggests: testthat
 NeedsCompilation: no
 LazyData: true
-Packaged: 2025-10-29 14:30:21 UTC; kevinxing
+Packaged: 2026-01-14 10:22:42 UTC; kevinxing
 Author: Xing Xing [aut, cre] (ORCID: <https://orcid.org/0000-0001-9394-8957>),
   Boyang Lu [aut],
   Lifeng Lin [aut],
@@ -44,4 +44,4 @@ Author: Xing Xing [aut, cre] (ORCID: <https://orcid.org/0000-0001-9394-8957>),
   Yong Chen [aut],
   Haitao Chu [aut] (ORCID: <https://orcid.org/0000-0003-0932-598X>)
 Repository: CRAN
-Date/Publication: 2025-10-29 14:50:02 UTC
+Date/Publication: 2026-01-14 11:50:02 UTC

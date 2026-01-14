@@ -13,11 +13,11 @@ test_that("nmadt.hierarchical.MNAR is working and the results are reproducible",
 
   testname=c("D-dimer","Ultrasonography")
   K = 2
-  mean = c(0.8461,0.9097)
-  sd<- c(0.0735,0.0478)
-  median <- c(0.8543,0.9144)
-  cil<-c(0.6750,0.8008)
-  ciu<-c(0.9621,0.9867)
+  mean = c(0.8501,0.9053)
+  sd<- c(0.0643,0.0598)
+  median <- c(0.8555,0.9127)
+  cil<-c(0.7055,0.9566)
+  ciu<-c(0.7887,0.9822)
   Se.stat <- array(paste(mean, " (", sd, ")", sep = ""),dim = c(K, 1))
   colnames(Se.stat) <- "Mean (SD)"
   rownames(Se.stat) <- testname

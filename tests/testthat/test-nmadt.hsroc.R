@@ -12,11 +12,11 @@ test_that("nmadt.hsroc is working and the results are reproducible", {
 
   testname=c("D-dimer","Ultrasonography")
   K = 2
-  mean = c(0.8548,0.9435)
-  sd<- c(0.0767,0.0667)
-  median <- c(0.8591,0.9594)
-  cil<-c(0.6878,0.8059)
-  ciu<-c(0.9872,1.000)
+  mean = c(0.8393,0.9503)
+  sd<- c(0.0766,0.0595)
+  median <- c(0.8419,0.9663)
+  cil<-c(0.6776,0.9780)
+  ciu<-c(0.8167,1.000)
   Se.stat <- array(paste(mean, " (", sd, ")", sep = ""),dim = c(K, 1))
   colnames(Se.stat) <- "Mean (SD)"
   rownames(Se.stat) <- testname

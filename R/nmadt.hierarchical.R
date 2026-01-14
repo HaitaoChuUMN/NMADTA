@@ -5,9 +5,18 @@
 #' @param data a list conating the input dataset to be used for meta-analysis.
 #' @param testname a string vector of the names of the candidate tests in the dataset in the same order as presetned in the dataset.
 #' @param directory a string specifying the designated directory to save trace plots or potential scale reduction factors calculated in the function. The default is NULL.
-#' @param diag a number indicating the value of diagonal entries of the scale matrix R of the precision matrix \eqn{\Sigma}. The default is 5.
-#' @param off_diag a number indicating the value of off-diagonal entries of the scale matrix R of the precision matrix \eqn{\Sigma}. The default is 0.05.
-#' @param digits a positive integer he number of digits to the right of the decimal point to keep for the results; digits=4 by default.
+#' @param diag A number specifying the diagonal entries of the scale matrix $R$ in the
+#'   Wishart prior for the precision matrix \eqn{\Sigma^{-1}}. Larger values of \code{diag}
+#'   typically imply stronger prior shrinkage, favoring smaller between-study variability in
+#'   prevalence, sensitivity, and specificity. The default is \code{5}.
+#' @param off_diag A number specifying the off-diagonal entries of the scale matrix $R$ in the
+#'   Wishart prior for \eqn{\Sigma^{-1}}, controlling the strength of prior dependence among
+#'   random effects (e.g., correlations between sensitivity and specificity and their association
+#'   with prevalence). The default is \code{0.05}. If strong correlations are expected, users may
+#'   increase \code{off_diag}; if substantially larger heterogeneity is anticipated, users may
+#'   decrease \code{diag}. We recommend sensitivity analyses alongside standard MCMC diagnostics.
+#' @param digits A positive integer specifying the number of digits to the right of the decimal
+#'   point to keep in the printed results; the default is \code{digits = 4}.
 #' @param mu_alpha a number indicating the mean of the normal distribution that the prior of the fixed effect for sensitivity follows. The default is 0.
 #' @param mu_beta a number indicating the mean of the normal distribution that the prior of the fixed effect for specificity follows. The default is 0.
 #' @param mu_eta a number indicating the mean of the normal distribution that the prior of the fixed effect for prevalence follows. The default is 0.
@@ -74,7 +83,7 @@ nmadt.hierarchical=function(nstu, K, data, testname, directory=NULL,
     stop("need to specify number of diagnostic tests.")
   if (K<1|K>5)
     stop("number of diagnostic tests out of bound (should be between 1-5).")
-
+  
   R <- matrix(off_diag,nrow=2*K+1,ncol=2*K+1)
   diag(R) <- diag
   R <-solve(R)
@@ -82,14 +91,14 @@ nmadt.hierarchical=function(nstu, K, data, testname, directory=NULL,
   df <- 2*K+1
   delta<-data[c(2:(K+2))]
   param = c("Se", "Sp","prev","ppv","npv","LRpos","LRneg")
-
+  
   if(!isTRUE(all(delta == floor(delta)))|any(delta<0)|any(delta>1)|any(is.na(delta))){
     stop("missing indicator not in the right format(0 for missing data and 1 for nonmissing data)" )
   }
   y<-data[c((K+3):(2*K+3))]
   sid<-data[,1]
   n<-data[,ncol(data)]
-
+  
   if(any(is.na(delta))){
     stop("missing test results should be denoted as 999 instead of NA)" )
   }
@@ -108,9 +117,9 @@ nmadt.hierarchical=function(nstu, K, data, testname, directory=NULL,
     if (!any(is.element(trace, param)))
       stop("at least one effect size in argument trace is not available.")
   }
-
+  
   #
-  monitor<-c('pi','post.Se','post.Sp','Se.stud','Sp.stud','mu','prev','ppv','npv','LRpos','LRneg','Cov')
+  monitor<-c('pi','post.Se','post.Sp','Se.stud','Sp.stud','mu','prev','ppv','npv','LRpos','LRneg','Cov','logLC')
   data.jags <- list('n' = n, 'delta'=delta,'N' = N,'y'=y,'K'=K,'R'=R,'df'=df,'nstu'=nstu,'sid'=sid,'mu_alpha'=mu_alpha,'mu_beta'=mu_beta,'mu_eta'=mu_eta,
                     'preci_alpha'=preci_alpha,'preci_beta'=preci_beta,'preci_eta'=preci_eta)
   seed <- sample(1000000, 1)
@@ -138,7 +147,7 @@ nmadt.hierarchical=function(nstu, K, data, testname, directory=NULL,
   out$rawOutput<-jags.out
   smry <- summary(jags.out)
   smry <- cbind(smry$statistics[, c("Mean", "SD")], smry$quantiles[, c("2.5%", "50%", "97.5%")])
-
+  
   Se.id <- grep("post.Se", rownames(smry))
   Se.stat <- array(paste(format(round(smry[Se.id, "Mean"],
                                       digits = digits), nsmall = digits), " (", format(round(smry[Se.id,
@@ -250,7 +259,77 @@ nmadt.hierarchical=function(nstu, K, data, testname, directory=NULL,
   colnames(LRneg.quan) <- "Median (95% CI)"
   rownames(LRneg.quan) <- testname
   out$LRneg <- list(Mean_SD = noquote(LRneg.stat), Median_CI = noquote(LRneg.quan))
-
+  
+  if (K >= 2) {
+    jags.mat <- as.matrix(jags.out)
+    
+    n_comparisons <- K * (K - 1) / 2
+    comparison_names <- character(n_comparisons)
+    dSe_mat <- matrix(NA, nrow = n_comparisons, ncol = 5)
+    dSp_mat <- matrix(NA, nrow = n_comparisons, ncol = 5)
+    colnames(dSe_mat) <- colnames(dSp_mat) <- c("Mean", "SD", "2.5%", "50%", "97.5%")
+    
+    idx <- 1
+    for (i in 1:(K-1)) {
+      for (j in (i+1):K) {
+        
+        Se_i <- jags.mat[, paste0("post.Se[", i, "]")]
+        Se_j <- jags.mat[, paste0("post.Se[", j, "]")]
+        Sp_i <- jags.mat[, paste0("post.Sp[", i, "]")]
+        Sp_j <- jags.mat[, paste0("post.Sp[", j, "]")]
+        
+        dSe <- Se_i - Se_j
+        dSp <- Sp_i - Sp_j
+        
+        comparison_names[idx] <- paste0(testname[i], " vs ", testname[j])
+        
+        dSe_mat[idx, ] <- c(mean(dSe), sd(dSe), quantile(dSe, c(0.025, 0.5, 0.975)))
+        dSp_mat[idx, ] <- c(mean(dSp), sd(dSp), quantile(dSp, c(0.025, 0.5, 0.975)))
+        
+        idx <- idx + 1
+      }
+    }
+    rownames(dSe_mat) <- rownames(dSp_mat) <- comparison_names
+    
+    dSe_stat <- array(
+      paste(format(round(dSe_mat[, "Mean"], digits = digits), nsmall = digits),
+            " (", format(round(dSe_mat[, "SD"], digits = digits), nsmall = digits), ")", sep = ""),
+      dim = c(n_comparisons, 1)
+    )
+    colnames(dSe_stat) <- "Mean (SD)"
+    rownames(dSe_stat) <- comparison_names
+    
+    dSe_quan <- array(
+      paste(format(round(dSe_mat[, "50%"], digits = digits), nsmall = digits),
+            " (", format(round(dSe_mat[, "2.5%"], digits = digits), nsmall = digits),
+            ", ", format(round(dSe_mat[, "97.5%"], digits = digits), nsmall = digits), ")", sep = ""),
+      dim = c(n_comparisons, 1)
+    )
+    colnames(dSe_quan) <- "Median (95% CrI)"
+    rownames(dSe_quan) <- comparison_names
+    
+    out$dSe <- list(Mean_SD = noquote(dSe_stat), Median_CrI = noquote(dSe_quan))
+    
+    dSp_stat <- array(
+      paste(format(round(dSp_mat[, "Mean"], digits = digits), nsmall = digits),
+            " (", format(round(dSp_mat[, "SD"], digits = digits), nsmall = digits), ")", sep = ""),
+      dim = c(n_comparisons, 1)
+    )
+    colnames(dSp_stat) <- "Mean (SD)"
+    rownames(dSp_stat) <- comparison_names
+    
+    dSp_quan <- array(
+      paste(format(round(dSp_mat[, "50%"], digits = digits), nsmall = digits),
+            " (", format(round(dSp_mat[, "2.5%"], digits = digits), nsmall = digits),
+            ", ", format(round(dSp_mat[, "97.5%"], digits = digits), nsmall = digits), ")", sep = ""),
+      dim = c(n_comparisons, 1)
+    )
+    colnames(dSp_quan) <- "Median (95% CrI)"
+    rownames(dSp_quan) <- comparison_names
+    
+    out$dSp <- list(Mean_SD = noquote(dSp_stat), Median_CrI = noquote(dSp_quan))
+  }
+  
   if (conv.diag) {
     message("Start calculating MCMC convergence diagnostic statistics...\n")
     conv.out <- gelman.diag(jags.out, multivariate = FALSE)
@@ -261,15 +340,57 @@ nmadt.hierarchical=function(nstu, K, data, testname, directory=NULL,
   }
   if (dic) {
     message("Start calculating deviance information criterion statistics...\n")
-    dic.out <- dic.samples(model = jags.m, n.iter = n.iter,
-                           thin = n.thin)
-    dev <- sum(dic.out$deviance)
-    pen <- sum(dic.out$penalty)
-    pen.dev <- dev + pen
-    dic.stat <- rbind(dev, pen, pen.dev)
-    rownames(dic.stat) <- c("D.bar", "pD", "DIC")
-    colnames(dic.stat) <- ""
-    out$DIC <- dic.stat
+    
+    tryCatch({
+      jags.mat <- as.matrix(jags.out)
+      logLC_vars <- grep("logLC\\[", varnames(jags.out), value = TRUE)
+      
+      if (length(logLC_vars) == 0) {
+        stop("logLC not found in MCMC samples")
+      }
+      
+      logLC_samples <- jags.mat[, logLC_vars, drop = FALSE]
+      
+      n_obs <- if (is.data.frame(data)) {
+        data[, ncol(data)]
+      } else {
+        unlist(data[[length(data)]])
+      }
+      
+      C <- 10000
+      N <- length(n_obs)
+      
+      deviance_samples <- apply(logLC_samples, 1, function(lc) {
+        logL <- C - lc
+        
+        deviance <- -2 * sum(logL)
+        
+        return(deviance)
+      })
+      
+      valid_samples <- deviance_samples[is.finite(deviance_samples)]
+      
+      if (length(valid_samples) == 0) {
+        stop("No valid deviance samples computed")
+      }
+      
+      dev <- mean(valid_samples)
+      pen <- var(valid_samples) / 2
+      pen.dev <- dev + pen
+      
+      dic.stat <- rbind(
+        round(dev, 2),
+        round(pen, 2),
+        round(pen.dev, 2)
+      )
+      rownames(dic.stat) <- c("D.bar", "pD", "DIC")
+      colnames(dic.stat) <- ""
+      out$DIC <- dic.stat
+      
+    }, error = function(e) {
+      warning(paste("DIC calculation failed:", e$message))
+      out$DIC <- NULL
+    })
   }
   if (mcmc.samples) {
     out$mcmc.samples <- jags.out
@@ -311,7 +432,7 @@ nmadt.hierarchical=function(nstu, K, data, testname, directory=NULL,
   }
   if (is.element("LRpos", trace)) {
     for (i in 1:K) {
-      file<-file.path(directory, paste("TracePlot_LRpose_", testname[i], ".pdf", sep = ""))
+      file<-file.path(directory, paste("TracePlot_LRpos_", testname[i], ".pdf", sep = ""))
       pdf(file)
       oldpar<-par(mfrow = c(n.chains, 1))
       on.exit(par(oldpar))
@@ -394,4 +515,3 @@ nmadt.hierarchical=function(nstu, K, data, testname, directory=NULL,
   return(out)
   #options(warn = 0)
 }
-

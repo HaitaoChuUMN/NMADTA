@@ -1,27 +1,42 @@
 #' Hierarchical Model Network Meta-Analysis of Diagnostic Accuracy Studies Under MNAR Assumptions
 #' @description \code{nmadt.hierarchical.MNAR} performs meta-analysis using the hierarchical model \insertCite{Ma2018}{NMADTA} based on the missing not at random(MNAR) assumption.
-#' @param nstu an integer indimessageing the number of studies included in the dataset.
-#' @param K an integer indicating the number of candiate test in the dataset.
-#' @param data a list conating the input dataset to be used for meta-analysis.
+#' @param nstu an integer indicating the number of studies included in the dataset.
+#' @param K an integer indicating the number of candidate test in the dataset.
+#' @param data a list containing the input dataset to be used for meta-analysis.
 #' @param testname a string vector of the names of the candidate tests in the dataset in the same order as presetned in the dataset.
 #' @param directory a string specifying the designated directory to save trace plots or potential scale reduction factors calculated in the function. The default is NULL.
-#' @param diag a number indicating the value of diagonal entries of the scale matrix R of the precision matrix \eqn{\Sigma}. The default is 5.
-#' @param off_diag a number indicating the value of off-diagonal entries of the scale matrix R of the precision matrix \eqn{\Sigma}. The default is 0.05.
-#' @param digits a positive integer he number of digits to the right of the decimal point to keep for the results; digits=4 by default.
+#' @param diag A number specifying the diagonal entries of the scale matrix $R$ in the
+#'   Wishart prior for the precision matrix \eqn{\Sigma^{-1}}. Larger values of \code{diag}
+#'   typically imply stronger prior shrinkage, favoring smaller between-study variability in
+#'   prevalence, sensitivity, and specificity. The default is \code{5}.
+#' @param off_diag A number specifying the off-diagonal entries of the scale matrix $R$ in the
+#'   Wishart prior for \eqn{\Sigma^{-1}}, controlling the strength of prior dependence among
+#'   random effects (e.g., correlations between sensitivity and specificity and their association
+#'   with prevalence). The default is \code{0.05}. If strong correlations are expected, users may
+#'   increase \code{off_diag}; if substantially larger heterogeneity is anticipated, users may
+#'   decrease \code{diag}. We recommend sensitivity analyses alongside standard MCMC diagnostics.
+#' @param digits A positive integer specifying the number of digits to the right of the decimal
+#'   point to keep in the printed results; the default is \code{digits = 4}.
 #' @param mu_alpha a number indicating the mean of the normal distribution that the prior of the fixed effect for sensitivity follows. The default is 0.
 #' @param mu_beta a number indicating the mean of the normal distribution that the prior of the fixed effect for specificity follows. The default is 0.
 #' @param mu_eta a number indicating the mean of the normal distribution that the prior of the fixed effect for prevalence follows. The default is 0.
 #' @param preci_alpha a number indicating the precision of the normal distribution that the prior of the fixed effect for sensitivity follows. The default is $0.1$.
 #' @param preci_beta a number indicating the precision of the normal distribution that the prior of the fixed effect for specificity follows. The default is $0.1$.
 #' @param preci_eta a number indicating the precision of the normal distribution that the prior of the fixed effect for prevalence follows. The default is $0.1$.
-#' @param gamma0 a vector indicating coefficients of study-specific specificity in the MNAR model.
-#' @param gamma1 a vector indicating coefficients of study-specific sensitivity in the MNAR model.
+#' @param gamma0 A numeric vector (length \code{K}) for coefficients on \eqn{\text{logit}(\text{Sp}_{ik})}
+#'   in the MNAR missingness model. Recommended to treat as sensitivity-analysis parameters.
+#'   \eqn{\gamma_{0k}=0} corresponds to MAR with respect to accuracy; negative values
+#'   (e.g., \code{c(0, -0.5, -1, -2)}) represent the common assumption that tests with poorer accuracy
+#'   are more likely to be missing.
+#' @param gamma1 A numeric vector (length \code{K}) for coefficients on \eqn{\text{logit}(\text{Se}_{ik})}
+#'   in the MNAR missingness model. Recommended to treat as sensitivity-analysis parameters.
+#'   See \code{gamma0} for suggested grids and interpretation.
 #' @param mu_gamma a number specifying mean of intercept in the MNAR model. The default is 0.
 #' @param preci_gamma a number specifying precision of intercept in the MNAR model. The default is 1.
 #' @param n.adapt a positive integer indicating the number of iterations for adaptation. The default is 5,000.
-#' @param n.iter a postive integer indicating the number of iterations in each MCMC chain. The default is 50,000.
+#' @param n.iter a positive integer indicating the number of iterations in each MCMC chain. The default is 50,000.
 #' @param n.burnin a positive integer indicating the number of burn-in iterations at the beginning of each chain without saving any of the posterior samples. The default is \code{floor(n.iter/2)}.
-#' @param n.chains a postive interger indicating the number of MCMC chains. The default is 3.
+#' @param n.chains a positive integer indicating the number of MCMC chains. The default is 3.
 #' @param n.thin the thinning rate for MCMC chains, which is used to save memory and computation time when \code{n.iter} is large.
 #' For example, the algorithm saves only one sample in every nth iteration, where n is given by \code{n.thin}.
 #' @param conv.diag a logical value specifying whether to compute potential scale reduction factors proposed for convergence diagnostics. The default is \code{FALSE}.
@@ -132,7 +147,7 @@ nmadt.hierarchical.MNAR=function(nstu, K, data, testname, directory = NULL,
     return(indicatorm)
   }
   M <- indicator(K,nstu,data)
-  monitor<-c('pi','post.Se','post.Sp','mu','Se.stud','Sp.stud','prev','ppv','npv','LRpos','LRneg','Cov','gamma0')
+  monitor<-c('pi','post.Se','post.Sp','mu','Se.stud','Sp.stud','prev','ppv','npv','LRpos','LRneg','Cov','gamma0','logLC')
   data.jags <- list('n' = n, 'delta'=delta,'N' = N,'y'=y,'K'=K,'R'=R,'df'=df,'nstu'=nstu,'sid'=sid,'mu_alpha'=mu_alpha,'mu_beta'=mu_beta,'mu_eta'=mu_eta,'mu_gamma'=mu_gamma,
                     'preci_alpha'=preci_alpha,'preci_beta'=preci_beta,'preci_eta'=preci_eta,'preci_gamma'=preci_gamma, 'gamma1'=gamma1, 'gamma2'=gamma0, 'M'=M)
   seed <- sample(1000000, 1)
@@ -271,7 +286,77 @@ nmadt.hierarchical.MNAR=function(nstu, K, data, testname, directory = NULL,
   colnames(LRneg.quan) <- "Median (95% CI)"
   rownames(LRneg.quan) <- testname
   out$LRneg <- list(Mean_SD = noquote(LRneg.stat), Median_CI = noquote(LRneg.quan))
-
+  
+  if (K >= 2) {
+    jags.mat <- as.matrix(jags.out)
+    
+    n_comparisons <- K * (K - 1) / 2
+    comparison_names <- character(n_comparisons)
+    dSe_mat <- matrix(NA, nrow = n_comparisons, ncol = 5)
+    dSp_mat <- matrix(NA, nrow = n_comparisons, ncol = 5)
+    colnames(dSe_mat) <- colnames(dSp_mat) <- c("Mean", "SD", "2.5%", "50%", "97.5%")
+    
+    idx <- 1
+    for (i in 1:(K-1)) {
+      for (j in (i+1):K) {
+        
+        Se_i <- jags.mat[, paste0("post.Se[", i, "]")]
+        Se_j <- jags.mat[, paste0("post.Se[", j, "]")]
+        Sp_i <- jags.mat[, paste0("post.Sp[", i, "]")]
+        Sp_j <- jags.mat[, paste0("post.Sp[", j, "]")]
+        
+        dSe <- Se_i - Se_j
+        dSp <- Sp_i - Sp_j
+        
+        comparison_names[idx] <- paste0(testname[i], " vs ", testname[j])
+        
+        dSe_mat[idx, ] <- c(mean(dSe), sd(dSe), quantile(dSe, c(0.025, 0.5, 0.975)))
+        dSp_mat[idx, ] <- c(mean(dSp), sd(dSp), quantile(dSp, c(0.025, 0.5, 0.975)))
+        
+        idx <- idx + 1
+      }
+    }
+    rownames(dSe_mat) <- rownames(dSp_mat) <- comparison_names
+    
+    dSe_stat <- array(
+      paste(format(round(dSe_mat[, "Mean"], digits = digits), nsmall = digits),
+            " (", format(round(dSe_mat[, "SD"], digits = digits), nsmall = digits), ")", sep = ""),
+      dim = c(n_comparisons, 1)
+    )
+    colnames(dSe_stat) <- "Mean (SD)"
+    rownames(dSe_stat) <- comparison_names
+    
+    dSe_quan <- array(
+      paste(format(round(dSe_mat[, "50%"], digits = digits), nsmall = digits),
+            " (", format(round(dSe_mat[, "2.5%"], digits = digits), nsmall = digits),
+            ", ", format(round(dSe_mat[, "97.5%"], digits = digits), nsmall = digits), ")", sep = ""),
+      dim = c(n_comparisons, 1)
+    )
+    colnames(dSe_quan) <- "Median (95% CrI)"
+    rownames(dSe_quan) <- comparison_names
+    
+    out$dSe <- list(Mean_SD = noquote(dSe_stat), Median_CrI = noquote(dSe_quan))
+    
+    dSp_stat <- array(
+      paste(format(round(dSp_mat[, "Mean"], digits = digits), nsmall = digits),
+            " (", format(round(dSp_mat[, "SD"], digits = digits), nsmall = digits), ")", sep = ""),
+      dim = c(n_comparisons, 1)
+    )
+    colnames(dSp_stat) <- "Mean (SD)"
+    rownames(dSp_stat) <- comparison_names
+    
+    dSp_quan <- array(
+      paste(format(round(dSp_mat[, "50%"], digits = digits), nsmall = digits),
+            " (", format(round(dSp_mat[, "2.5%"], digits = digits), nsmall = digits),
+            ", ", format(round(dSp_mat[, "97.5%"], digits = digits), nsmall = digits), ")", sep = ""),
+      dim = c(n_comparisons, 1)
+    )
+    colnames(dSp_quan) <- "Median (95% CrI)"
+    rownames(dSp_quan) <- comparison_names
+    
+    out$dSp <- list(Mean_SD = noquote(dSp_stat), Median_CrI = noquote(dSp_quan))
+  }
+  
   if (conv.diag) {
     message("Start calculating MCMC convergence diagnostic statistics...\n")
     conv.out <- gelman.diag(jags.out, multivariate = FALSE)
@@ -282,15 +367,57 @@ nmadt.hierarchical.MNAR=function(nstu, K, data, testname, directory = NULL,
   }
   if (dic) {
     message("Start calculating deviance information criterion statistics...\n")
-    dic.out <- dic.samples(model = jags.m, n.iter = n.iter,
-                           thin = n.thin)
-    dev <- sum(dic.out$deviance)
-    pen <- sum(dic.out$penalty)
-    pen.dev <- dev + pen
-    dic.stat <- rbind(dev, pen, pen.dev)
-    rownames(dic.stat) <- c("D.bar", "pD", "DIC")
-    colnames(dic.stat) <- ""
-    out$DIC <- dic.stat
+    
+    tryCatch({
+      jags.mat <- as.matrix(jags.out)
+      logLC_vars <- grep("logLC\\[", varnames(jags.out), value = TRUE)
+      
+      if (length(logLC_vars) == 0) {
+        stop("logLC not found in MCMC samples")
+      }
+      
+      logLC_samples <- jags.mat[, logLC_vars, drop = FALSE]
+      
+      n_obs <- if (is.data.frame(data)) {
+        data[, ncol(data)]
+      } else {
+        unlist(data[[length(data)]])
+      }
+      
+      C <- 10000
+      N <- length(n_obs)
+      
+      deviance_samples <- apply(logLC_samples, 1, function(lc) {
+        logL <- C - lc
+        
+        deviance <- -2 * sum(logL)
+        
+        return(deviance)
+      })
+      
+      valid_samples <- deviance_samples[is.finite(deviance_samples)]
+      
+      if (length(valid_samples) == 0) {
+        stop("No valid deviance samples computed")
+      }
+      
+      dev <- mean(valid_samples)
+      pen <- var(valid_samples) / 2
+      pen.dev <- dev + pen
+      
+      dic.stat <- rbind(
+        round(dev, 2),
+        round(pen, 2),
+        round(pen.dev, 2)
+      )
+      rownames(dic.stat) <- c("D.bar", "pD", "DIC")
+      colnames(dic.stat) <- ""
+      out$DIC <- dic.stat
+      
+    }, error = function(e) {
+      warning(paste("DIC calculation failed:", e$message))
+      out$DIC <- NULL
+    })
   }
   if (mcmc.samples) {
     out$mcmc.samples <- jags.out
