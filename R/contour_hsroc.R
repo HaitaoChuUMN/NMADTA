@@ -61,7 +61,6 @@ contour_hsroc <- function(x,
       xlab("False positive rate") +
       ylab("True positive rate")
     
-    print(p)
     plots[[i]] <- p
     
     # --- Page handling (for multiple plots in sequence) ---

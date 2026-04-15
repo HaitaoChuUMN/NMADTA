@@ -63,8 +63,7 @@ contour_hierarchical <- function(x,
       ggtitle(testname[i]) +
       xlab("False positive rate") +
       ylab("True positive rate")
-    
-    print(p)
+
     plots[[i]] <- p
     
     # --- Optional pagination ---

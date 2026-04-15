@@ -56,7 +56,7 @@
 #' kang.out <- nmadt.hierarchical.MNAR(nstu = 12, K = 2, data = dat.kang,
 #'                                    directory = tempdir(), 
 #'                                    testname = c("D-dimer", "Ultrasonography"),
-#'                                    n.adapt = 1000, n.iter = 1000, n.chains = 3,
+#'                                    n.adapt = 1000, n.iter = 1000, n.chains = 2,
 #'                                    gamma1=c(-0.5,-0.5), gamma0=c(-0.5,-0.5))
 #' @import rjags
 #' @import coda

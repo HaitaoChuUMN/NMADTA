@@ -1,9 +1,9 @@
-6e5fa96b560304336ac57b48ec9f932c *DESCRIPTION
+67a55a0acd5eefe60e6a49fbc1668d11 *DESCRIPTION
 01e9b9129744a488905512f5c9bd4761 *NAMESPACE
 ff8e74989d572efa3535b075718a1a0b *R/cb.R
 4fdd9296876a71173db87cd48409f216 *R/cb_h.R
-d7b805bd227a00d9fe63a62ac99effa0 *R/contour_hierarchical.R
-968ef5ae3a5b464dfbc7aaa07cfa911b *R/contour_hsroc.R
+5c3b9ac889272a111a70d464048d9892 *R/contour_hierarchical.R
+3ab0fc3b6e2fe79a3afa13005bf2a935 *R/contour_hsroc.R
 73c41407067514b4fe9f00bf993a835f *R/dat.kang.R
 794279ba8817986e09d9e947b7acc4c6 *R/density_hierarchical.R
 96ca238c9e044efb41d3d1d69d9af80d *R/density_hsroc.R
@@ -12,7 +12,7 @@ a8196f332cecadda32f7ca7e6f4b233f *R/forestplot.hierarchical.R
 d87fb4a9c78bfe5d5fafaffdf5e1d05a *R/forestplot.hsroc.R
 37b7190e55af526f9c62dd3e3684f7ed *R/globals.R
 d5ac457c8de4a1dd47eb4cd8e24fe8fa *R/indicator.R
-0a85698841acd8a6569cbf2fa58aa3eb *R/nmadt.hierarchical.MNAR.R
+b9587d6118940cb0f62c368cac99e10d *R/nmadt.hierarchical.MNAR.R
 18203767eb1fd339462681383c967515 *R/nmadt.hierarchical.R
 ff06ad3969c7ca086fadc12913831aeb *R/nmadt.hsroc.MNAR.R
 9d1cebbfd6c5c5716656cf891af3f5f5 *R/nmadt.hsroc.R
@@ -23,7 +23,7 @@ fb56500bf5773144de0b39d9ee021c72 *R/plot.nmadt.R
 c9c82bf768e159ca2ecf30e892a720ba *R/sroc.hsroc.R
 e1b27008f72b669a3385b348b958fb92 *R/summary.nmadt.R
 9be2bac2c4b4bbe77eea1a631d4d41b2 *R/zzz-imports.R
-c534db63ae7906cf4655d0180eff7243 *build/partial.rdb
+445efddb05b5871895e097772eda2d66 *build/partial.rdb
 1c0c793a52d7d6ac9dbcb8dd85159af6 *data/dat.kang.rda
 9e32e6356b8db1ccdbc5f391e62f8b0b *inst/JAGSmodels/model3MNAR.txt
 256e2c754bb057a02b2be5911f435e64 *inst/JAGSmodels/model_h1.txt
@@ -31,7 +31,7 @@ c534db63ae7906cf4655d0180eff7243 *build/partial.rdb
 8b79a7b293fc105db471056278b260b8 *inst/JAGSmodels/model_hsroc.txt
 afcac4da1d78e4e47cd22e95ca17265f *inst/REFERENCES.bib
 c6a75a18bd209079d0db12a1e7ec6de4 *man/dat.kang.Rd
-41f70b82ca8a3a39c38df1f03bed9089 *man/nmadt.hierarchical.MNAR.Rd
+d3d6cbe88ff4a803ea5dd9249286562c *man/nmadt.hierarchical.MNAR.Rd
 507d4818722cfc8dd6f4b624a35427b2 *man/nmadt.hierarchical.Rd
 8f92f516e9c5c73228430466dc267838 *man/nmadt.hsroc.MNAR.Rd
 af81f3db927a683b535c898dd30781cf *man/nmadt.hsroc.Rd
