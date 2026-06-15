@@ -1,4 +1,4 @@
-67a55a0acd5eefe60e6a49fbc1668d11 *DESCRIPTION
+07d8e8b21c30c34f4e80a573e2a4b4e6 *DESCRIPTION
 01e9b9129744a488905512f5c9bd4761 *NAMESPACE
 ff8e74989d572efa3535b075718a1a0b *R/cb.R
 4fdd9296876a71173db87cd48409f216 *R/cb_h.R
@@ -23,7 +23,7 @@ fb56500bf5773144de0b39d9ee021c72 *R/plot.nmadt.R
 c9c82bf768e159ca2ecf30e892a720ba *R/sroc.hsroc.R
 e1b27008f72b669a3385b348b958fb92 *R/summary.nmadt.R
 9be2bac2c4b4bbe77eea1a631d4d41b2 *R/zzz-imports.R
-445efddb05b5871895e097772eda2d66 *build/partial.rdb
+2ac3f3462aaf95ef515a8d6b8a2dae21 *build/partial.rdb
 1c0c793a52d7d6ac9dbcb8dd85159af6 *data/dat.kang.rda
 9e32e6356b8db1ccdbc5f391e62f8b0b *inst/JAGSmodels/model3MNAR.txt
 256e2c754bb057a02b2be5911f435e64 *inst/JAGSmodels/model_h1.txt
